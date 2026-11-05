@@ -4,7 +4,7 @@ permissions:
   contents: read
 jobs:
   wordpress:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -42,7 +42,7 @@ jobs:
       - name: WordPress shortcode tests
         run: wp eval-file "$GITHUB_WORKSPACE/tests/wordpress.php" --path=/tmp/simplecopy-wp
   browser:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -53,7 +53,7 @@ jobs:
       - run: npm test
   package:
     needs: [wordpress, browser]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Build installable ZIP
