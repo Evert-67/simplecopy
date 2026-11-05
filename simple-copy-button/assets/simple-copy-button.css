@@ -1,0 +1,26 @@
+.scb-copy-wrap {
+    margin: 1rem 0;
+}
+
+.scb-copy-button {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    cursor: pointer;
+    border: 1px solid currentColor;
+    border-radius: .35rem;
+    padding: .45rem .75rem;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    line-height: 1.2;
+}
+
+.scb-copy-button:hover,
+.scb-copy-button:focus {
+    opacity: .85;
+}
+
+.scb-copy-button.scb-copied {
+    opacity: .75;
+}

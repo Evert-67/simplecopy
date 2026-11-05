@@ -1,0 +1,64 @@
+name: Simple Copy tests
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  wordpress:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.4', '8.3', '8.4']
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: testing
+          MYSQL_DATABASE: wordpress
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -ptesting"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mysqli
+          tools: wp-cli
+          coverage: none
+      - name: PHP syntax
+        run: find simple-copy-button tests -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: JavaScript syntax
+        run: node --check simple-copy-button/assets/simple-copy-button.js
+      - name: Install WordPress and activate plugin
+        run: |
+          mkdir /tmp/simplecopy-wp
+          wp core download --path=/tmp/simplecopy-wp --version=6.8.3
+          wp config create --path=/tmp/simplecopy-wp --dbname=wordpress --dbuser=root --dbpass=testing --dbhost=127.0.0.1:3306
+          wp core install --path=/tmp/simplecopy-wp --url=http://localhost --title=SimpleCopy-test --admin_user=testadmin --admin_password=local-ci-only --admin_email=test@example.invalid --skip-email
+          cp -r simple-copy-button /tmp/simplecopy-wp/wp-content/plugins/
+          wp plugin activate simple-copy-button --path=/tmp/simplecopy-wp
+      - name: WordPress shortcode tests
+        run: wp eval-file "$GITHUB_WORKSPACE/tests/wordpress.php" --path=/tmp/simplecopy-wp
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts
+      - run: npx playwright install --with-deps chromium
+      - run: npm test
+  package:
+    needs: [wordpress, browser]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build installable ZIP
+        run: zip -qr simple-copy-button-1.2.1.zip simple-copy-button
+      - uses: actions/upload-artifact@v4
+        with:
+          name: simple-copy-button-1.2.1
+          path: simple-copy-button-1.2.1.zip
