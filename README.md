@@ -4,7 +4,11 @@ A lightweight WordPress plugin by Evert Beijes / CodePug. Add shortcode buttons 
 
 ## Install
 
-Open **Actions → Simple Copy tests**, select a successful run and download the `simple-copy-button-1.2.1` artifact. Extract the artifact and upload the contained plugin ZIP through **WordPress → Plugins → Add New → Upload Plugin**.
+**[Download the installable WordPress plugin ZIP](https://github.com/Evert-67/simplecopy/releases/latest/download/simple-copy-button-1.2.1.zip)**
+
+Upload this ZIP directly through **WordPress → Plugins → Add New → Upload Plugin**. Do not extract it first. If updating, choose to replace the existing plugin.
+
+Use the named plugin ZIP under [Releases](https://github.com/Evert-67/simplecopy/releases/latest). **Code → Download ZIP**, `main.zip`, and the automatic **Source code** downloads are development archives, not WordPress installation packages.
 
 Requires WordPress 5.8+ and PHP 7.4+. Automated integration checks currently use WordPress 6.8.3 on PHP 7.4, 8.3 and 8.4.
 

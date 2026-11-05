@@ -37,8 +37,8 @@ jobs:
           wp core download --path=/tmp/simplecopy-wp --version=6.8.3
           wp config create --path=/tmp/simplecopy-wp --dbname=wordpress --dbuser=root --dbpass=testing --dbhost=127.0.0.1:3306
           wp core install --path=/tmp/simplecopy-wp --url=http://localhost --title=SimpleCopy-test --admin_user=testadmin --admin_password=local-ci-only --admin_email=test@example.invalid --skip-email
-          cp -r simple-copy-button /tmp/simplecopy-wp/wp-content/plugins/
-          wp plugin activate simple-copy-button --path=/tmp/simplecopy-wp
+          zip -qr /tmp/simple-copy-button-install.zip simple-copy-button
+          wp plugin install /tmp/simple-copy-button-install.zip --activate --path=/tmp/simplecopy-wp
       - name: WordPress shortcode tests
         run: wp eval-file "$GITHUB_WORKSPACE/tests/wordpress.php" --path=/tmp/simplecopy-wp
   browser:
@@ -70,3 +70,39 @@ jobs:
         with:
           name: simple-copy-button-1.2.1
           path: simple-copy-button-1.2.1.zip
+
+  release:
+    needs: [package]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    concurrency:
+      group: release-1.2.1
+      cancel-in-progress: false
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: simple-copy-button-1.2.1
+          path: dist
+      - name: Check plugin archive
+        run: |
+          python3 - <<'PY'
+          import zipfile
+          with zipfile.ZipFile('dist/simple-copy-button-1.2.1.zip') as archive:
+              files = archive.namelist()
+              assert 'simple-copy-button/simple-copy-button.php' in files
+              assert all(name.startswith('simple-copy-button/') for name in files)
+              assert archive.testzip() is None
+          PY
+      - name: Publish installable WordPress ZIP
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_COMMIT: ${{ github.sha }}
+        run: |
+          if gh release view v1.2.1 > /dev/null 2>&1; then
+            echo "Release v1.2.1 already exists; preserving published assets."
+          else
+            gh release create v1.2.1 "dist/simple-copy-button-1.2.1.zip" --target "$RELEASE_COMMIT" --title "Simple Copy Button 1.2.1" --notes "Download simple-copy-button-1.2.1.zip below and upload it directly in WordPress via Plugins > Add New > Upload Plugin. Do not use the automatically generated Source code archives. Automated tests include installing and activating the packaged ZIP in WordPress." --latest
+          fi
