@@ -2,7 +2,7 @@ const { chromium } = require('playwright');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 (async () => {
- const browser = await chromium.launch({headless:true});
+ const browser = await chromium.launch({headless:true, executablePath:process.env.SCB_BROWSER_PATH || undefined});
  let checks=0;
  try {
   const page = await browser.newPage();

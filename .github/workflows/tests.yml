@@ -42,6 +42,7 @@ jobs:
       - name: WordPress shortcode tests
         run: wp eval-file "$GITHUB_WORKSPACE/tests/wordpress.php" --path=/tmp/simplecopy-wp
   browser:
+    timeout-minutes: 10
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -49,7 +50,14 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --ignore-scripts
-      - run: npx playwright install --with-deps chromium
+      - name: Select browser
+        run: |
+          browser_path=$(command -v google-chrome || command -v chromium || true)
+          if [ -n "$browser_path" ]; then
+            echo "SCB_BROWSER_PATH=$browser_path" >> "$GITHUB_ENV"
+          else
+            npx playwright install --with-deps chromium
+          fi
       - run: npm test
   package:
     needs: [wordpress, browser]
